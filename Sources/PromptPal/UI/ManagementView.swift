@@ -34,6 +34,24 @@ struct ManagementView: View {
     var body: some View {
         VStack(spacing: 0) {
             headerBar
+            if let loadError = store.lastLoadError {
+                HStack(spacing: 8) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.orange)
+                    Text("\(loadError)（已备份原文件至 Application Support/PromptPal/）")
+                        .font(.caption)
+                        .lineLimit(2)
+                    Spacer()
+                    Button("打开目录") {
+                        NSWorkspace.shared.activateFileViewerSelecting([store.fileURL.deletingLastPathComponent()])
+                    }
+                    .font(.caption)
+                    .buttonStyle(.bordered)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(Color.orange.opacity(0.12))
+            }
             Divider()
             switch navState.selectedTab {
             case .prompts:

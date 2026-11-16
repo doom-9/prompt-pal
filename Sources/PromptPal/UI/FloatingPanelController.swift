@@ -153,6 +153,10 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
     }
 
     private func handleKeyDown(_ event: NSEvent) -> Bool {
+        if let inputClient = panel?.firstResponder as? NSTextInputClient, inputClient.hasMarkedText() {
+            return false
+        }
+
         let items = store.filteredPrompts(query: viewModel.query)
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
 

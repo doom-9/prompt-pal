@@ -15,10 +15,28 @@ public enum HotKeyError: Error, LocalizedError {
     }
 }
 
+private final class CarbonHotKeyStorage: @unchecked Sendable {
+    var hotKeyRef: EventHotKeyRef?
+    var eventHandlerRef: EventHandlerRef?
+
+    func unregisterHotKey() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
+        }
+    }
+
+    deinit {
+        unregisterHotKey()
+        if let eventHandlerRef {
+            RemoveEventHandler(eventHandlerRef)
+        }
+    }
+}
+
 @MainActor
 public final class HotKeyManager {
-    private var hotKeyRef: EventHotKeyRef?
-    private var eventHandlerRef: EventHandlerRef?
+    private let storage = CarbonHotKeyStorage()
     private let onHotKeyPressed: @MainActor () -> Void
 
     private static let hotKeySignature: OSType = 0x5050414C // "PPAL"
@@ -32,12 +50,13 @@ public final class HotKeyManager {
     public func register(_ config: HotKeyConfig) -> Result<Void, HotKeyError> {
         unregister()
 
-        if eventHandlerRef == nil {
+        if storage.eventHandlerRef == nil {
             var eventType = EventTypeSpec(
                 eventClass: OSType(kEventClassKeyboard),
                 eventKind: UInt32(kEventHotKeyPressed)
             )
             let userData = Unmanaged.passUnretained(self).toOpaque()
+            var handlerRef: EventHandlerRef?
             let installStatus = InstallEventHandler(
                 GetApplicationEventTarget(),
                 { _, event, userData -> OSStatus in
@@ -52,7 +71,9 @@ public final class HotKeyManager {
                         nil,
                         &pressedID
                     )
-                    guard status == noErr, pressedID.id == HotKeyManager.hotKeyID else {
+                    guard status == noErr,
+                          pressedID.signature == HotKeyManager.hotKeySignature,
+                          pressedID.id == HotKeyManager.hotKeyID else {
                         return OSStatus(eventNotHandledErr)
                     }
                     let manager = Unmanaged<HotKeyManager>.fromOpaque(userData).takeUnretainedValue()
@@ -64,11 +85,12 @@ public final class HotKeyManager {
                 1,
                 &eventType,
                 userData,
-                &eventHandlerRef
+                &handlerRef
             )
             if installStatus != noErr {
                 return .failure(.eventHandlerInstallFailed(installStatus))
             }
+            storage.eventHandlerRef = handlerRef
         }
 
         let id = EventHotKeyID(signature: Self.hotKeySignature, id: Self.hotKeyID)
@@ -84,14 +106,11 @@ public final class HotKeyManager {
         guard regStatus == noErr, let ref else {
             return .failure(.registrationFailed(regStatus))
         }
-        hotKeyRef = ref
+        storage.hotKeyRef = ref
         return .success(())
     }
 
     public func unregister() {
-        if let hotKeyRef {
-            UnregisterEventHotKey(hotKeyRef)
-            self.hotKeyRef = nil
-        }
+        storage.unregisterHotKey()
     }
 }

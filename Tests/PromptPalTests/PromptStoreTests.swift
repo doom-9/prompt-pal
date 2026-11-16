@@ -78,4 +78,19 @@ final class PromptStoreTests: XCTestCase {
         let files = try FileManager.default.contentsOfDirectory(atPath: tempDir.path)
         XCTAssertTrue(files.contains { $0.hasPrefix("prompts.json") && $0.hasSuffix(".bak") })
     }
+
+    func testUpdatePromptDoesNotResortMidEdit() {
+        let store = PromptStore(fileURL: storeURL, seedIfMissing: false)
+        let first = store.addPrompt(title: "First", content: "1")
+        let second = store.addPrompt(title: "Second", content: "2")
+        let initialOrder = store.prompts.map(\.id)
+
+        var edited = first
+        edited.title = "First Edited"
+        store.updatePrompt(edited)
+
+        XCTAssertEqual(store.prompts.map(\.id), initialOrder)
+        XCTAssertEqual(store.prompts.first { $0.id == first.id }?.title, "First Edited")
+        XCTAssertEqual(store.prompts.first { $0.id == second.id }?.title, "Second")
+    }
 }

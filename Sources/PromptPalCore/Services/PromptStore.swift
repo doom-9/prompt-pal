@@ -7,6 +7,7 @@ public final class PromptStore: ObservableObject {
     @Published public private(set) var lastLoadError: String?
 
     public let fileURL: URL
+    private var pendingSaveTask: Task<Void, Never>?
 
     private let encoder: JSONEncoder = {
         let encoder = JSONEncoder()
@@ -58,10 +59,21 @@ public final class PromptStore: ObservableObject {
 
     public func updatePrompt(_ item: PromptItem) {
         guard let index = prompts.firstIndex(where: { $0.id == item.id }) else { return }
+        let pinChanged = prompts[index].isPinned != item.isPinned
         var updated = item
         updated.updatedAt = Date()
         prompts[index] = updated
-        sortAndSave()
+        if pinChanged {
+            prompts = sorted(prompts)
+        }
+        scheduleSave()
+    }
+
+    public func flushPendingSave() {
+        guard pendingSaveTask != nil else { return }
+        pendingSaveTask?.cancel()
+        pendingSaveTask = nil
+        save()
     }
 
     public func deletePrompt(id: UUID) {
@@ -113,8 +125,20 @@ public final class PromptStore: ObservableObject {
     }
 
     private func sortAndSave() {
+        pendingSaveTask?.cancel()
+        pendingSaveTask = nil
         prompts = sorted(prompts)
         save()
+    }
+
+    private func scheduleSave() {
+        pendingSaveTask?.cancel()
+        pendingSaveTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            self?.pendingSaveTask = nil
+            self?.save()
+        }
     }
 
     private func sorted(_ items: [PromptItem]) -> [PromptItem] {
