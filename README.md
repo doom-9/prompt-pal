@@ -1,5 +1,7 @@
 # PromptPal
 
+[English](README.en.md) | **简体中文**
+
 [![CI](https://github.com/doom-9/prompt-pal/actions/workflows/ci.yml/badge.svg)](https://github.com/doom-9/prompt-pal/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/doom-9/prompt-pal)](https://github.com/doom-9/prompt-pal/releases/latest)
 [![Platform](https://img.shields.io/badge/macOS-14.0%2B-blue)](https://github.com/doom-9/prompt-pal)
