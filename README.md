@@ -7,7 +7,7 @@
 [![Platform](https://img.shields.io/badge/macOS-14.0%2B-blue)](https://github.com/doom-9/prompt-pal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-一个为 macOS 打造的轻量级菜单栏 Prompt 速取工具。配合 Claude Code 等 CLI 编程工具使用时，只需按下全局快捷键即可呼出悬浮面板，用键盘快速选中一条 Prompt 并复制到剪贴板，自动把焦点还给终端。
+一个为 macOS 打造的轻量级菜单栏 Prompt 速取工具。配合 Claude Code 等 CLI 编程工具使用时，只需按下全局快捷键即可呼出悬浮面板，用键盘选中一条 Prompt 并复制到剪贴板。浮窗打开时，原应用保持在前台。关闭浮窗后，可以在原输入框继续输入。
 
 ## 特性
 

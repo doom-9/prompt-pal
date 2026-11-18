@@ -16,7 +16,6 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
     private let onCreateNewPrompt: () -> Void
 
     private var panel: PickerPanel?
-    private var previousApp: NSRunningApplication?
     private var keyMonitor: Any?
 
     public init(
@@ -32,38 +31,29 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
 
     public func toggle() {
         if let panel, panel.isVisible {
-            hide(restorePreviousApp: true)
+            hide()
         } else {
             show()
         }
     }
 
     public func show() {
-        let frontmost = NSWorkspace.shared.frontmostApplication
-        if frontmost?.bundleIdentifier != Bundle.main.bundleIdentifier {
-            previousApp = frontmost
-        }
-
         let panel = ensurePanel()
         viewModel.reset()
         positionOnActiveScreen(panel)
 
-        NSApp.activate(ignoringOtherApps: true)
+        // The nonactivating panel takes keyboard focus without deactivating the current app.
         panel.makeKeyAndOrderFront(nil)
         installKeyMonitor()
     }
 
-    public func hide(restorePreviousApp: Bool) {
+    private func hide() {
         removeKeyMonitor()
         panel?.orderOut(nil)
-        if restorePreviousApp, let app = previousApp {
-            app.activate()
-        }
-        previousApp = nil
     }
 
     public func windowDidResignKey(_ notification: Notification) {
-        hide(restorePreviousApp: false)
+        hide()
     }
 
     private func ensurePanel() -> PickerPanel {
@@ -101,11 +91,11 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
                 self?.copyAndDismiss(item)
             },
             onOpenManagement: { [weak self] in
-                self?.hide(restorePreviousApp: false)
+                self?.hide()
                 self?.onOpenManagement()
             },
             onCreateNew: { [weak self] in
-                self?.hide(restorePreviousApp: false)
+                self?.hide()
                 self?.onCreateNewPrompt()
             }
         )
@@ -134,7 +124,7 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
     private func copyAndDismiss(_ item: PromptItem) {
         ClipboardService.copy(item.content)
         store.recordUsage(id: item.id)
-        hide(restorePreviousApp: true)
+        hide()
     }
 
     private func installKeyMonitor() {
@@ -175,12 +165,12 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
                 return true
             }
             if event.keyCode == UInt16(kVK_ANSI_N) {
-                hide(restorePreviousApp: false)
+                hide()
                 onCreateNewPrompt()
                 return true
             }
             if event.keyCode == UInt16(kVK_ANSI_Comma) {
-                hide(restorePreviousApp: false)
+                hide()
                 onOpenManagement()
                 return true
             }
@@ -188,7 +178,7 @@ public final class FloatingPanelController: NSObject, NSWindowDelegate {
 
         switch Int(event.keyCode) {
         case kVK_Escape:
-            hide(restorePreviousApp: true)
+            hide()
             return true
         case kVK_DownArrow:
             viewModel.moveSelection(delta: 1, count: items.count)

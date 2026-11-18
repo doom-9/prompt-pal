@@ -7,7 +7,7 @@
 [![Platform](https://img.shields.io/badge/macOS-14.0%2B-blue)](https://github.com/doom-9/prompt-pal)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-A lightweight native macOS menu bar utility for storing and picking prompts at the speed of thought. Built for CLI coding workflows like Claude Code—press a global hotkey to summon a floating picker, select a prompt by keyboard, copy it to the clipboard, and automatically return focus to your terminal.
+A lightweight native macOS menu bar utility for storing and picking prompts. Built for CLI coding workflows like Claude Code, it lets you summon a floating picker with a global hotkey and copy a prompt to the clipboard using the keyboard. Your original app stays active while the picker is open, and you can keep typing in the same field after it closes.
 
 ## Features
 
